@@ -467,11 +467,18 @@
 //  資料定義
 // ═══════════════════════════════════════
 const ALL_MODELS = [
-  { file: "models/01-黑貓-歐蜜麻.glb",       name: "黑貓 — 歐蜜麻",       hidden: false },
-  { file: "models/02-銀虎斑貓-島灰.glb",     name: "銀虎斑貓 — 島灰",     hidden: false },
-  { file: "models/03-暹羅貓-月月.glb",       name: "暹羅貓 — 月月",       hidden: false },
-  { file: "models/04-三花貓-LUCK.glb",       name: "三花貓 — LUCK",       hidden: false },
-  { file: "models/05-豹貓-斑吉.glb",         name: "豹貓 — 斑吉",         hidden: false },
+  { file: "models/01-黑貓-歐蜜麻.glb",           name: "黑貓 — 歐蜜麻",           hidden: false },
+  { file: "models/02-銀虎斑貓-島灰.glb",         name: "銀虎斑貓 — 島灰",         hidden: false },
+  { file: "models/03-暹羅貓-月月.glb",           name: "暹羅貓 — 月月",           hidden: false },
+  { file: "models/04-三花貓-LUCK.glb",           name: "三花貓 — LUCK",           hidden: false },
+  { file: "models/05-豹貓-斑吉.glb",             name: "豹貓 — 斑吉",             hidden: false },
+  { file: "models/06-藍貓-藍藍.glb",             name: "藍貓 — 藍藍",             hidden: false },
+  { file: "models/07-虎斑貓-虎醬.glb",           name: "虎斑貓 — 虎醬",           hidden: false },
+  { file: "models/08-賓士貓-芝麻.glb",           name: "賓士貓 — 芝麻",           hidden: false },
+  { file: "models/09-橘貓-橘子.glb",             name: "橘貓 — 橘子",             hidden: false },
+  { file: "models/10-隱藏款-牛奶貓-斑奶迪克.glb", name: "隱藏款 牛奶貓 — 斑奶迪克", hidden: true  },
+  { file: "models/11-隱藏款-牛奶貓-貝特.glb",     name: "隱藏款 牛奶貓 — 貝特",     hidden: true  },
+  { file: "models/12-隱藏款-招財貓-來財.glb",     name: "隱藏款 招財貓 — 來財",     hidden: true  },
 ];
 
 let isAnimating = false;
@@ -603,6 +610,7 @@ function spawnConfetti() {
 // ═══════════════════════════════════════
 function resetScene() {
   document.getElementById("result-overlay").style.display = "none";
+  document.getElementById("result-model").removeAttribute("src");
   const img = document.getElementById("box-img");
   img.style.visibility = "visible";
   img.style.animation = "";
