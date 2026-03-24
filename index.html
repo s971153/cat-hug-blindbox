@@ -189,13 +189,7 @@
     justify-content: center;
     overflow: hidden;
     z-index: 2;
-    cursor: pointer;
-    transition: transform 0.25s, box-shadow 0.25s;
-  }
-  .ref-img-float:hover {
-    transform: scale(1.8);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    z-index: 10;
+    pointer-events: none;
   }
   .ref-img-float img {
     max-width: 92%;
@@ -560,7 +554,8 @@
       id="result-model"
       auto-rotate
       camera-controls
-      touch-action="pan-y"
+      disable-pan
+      disable-zoom
       shadow-intensity="1.2"
       environment-image="neutral"
       exposure="1.1"
@@ -583,7 +578,7 @@
       </div>
       <model-viewer
         id="detail-model"
-        auto-rotate camera-controls touch-action="pan-y"
+        auto-rotate camera-controls disable-pan disable-zoom
         shadow-intensity="1.2" environment-image="neutral"
         exposure="1.1" camera-orbit="30deg 75deg auto"
       ></model-viewer>
@@ -848,7 +843,7 @@ function renderCollection() {
     card.innerHTML = `
       <model-viewer
         src="${encodeURIComponent(item.file)}"
-        auto-rotate camera-controls touch-action="pan-y"
+        auto-rotate camera-controls disable-pan disable-zoom
         shadow-intensity="1" environment-image="neutral"
         loading="lazy"
       ></model-viewer>
