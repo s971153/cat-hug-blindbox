@@ -147,13 +147,50 @@
     60% { transform: scale(1.1); }
     100% { transform: scale(1); opacity: 1; }
   }
-  #result-overlay model-viewer {
-    width: min(90vw, 520px);
-    height: min(60vh, 520px);
+  /* ── 結果對照區 ── */
+  .compare-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: min(95vw, 900px);
+  }
+  .compare-panel {
+    flex: 1;
+    min-width: 200px;
+    max-width: 440px;
+    text-align: center;
+  }
+  .compare-panel .panel-label {
+    font-size: 0.85em;
+    color: #888;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .compare-panel model-viewer {
+    width: 100%;
+    height: min(50vh, 400px);
     border-radius: 20px;
     background: rgba(255,255,255,0.5);
     box-shadow: 0 8px 40px rgba(0,0,0,0.12);
     --poster-color: transparent;
+  }
+  .compare-panel .ref-img-wrap {
+    width: 100%;
+    height: min(50vh, 400px);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.5);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .compare-panel .ref-img-wrap img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
   }
   #result-overlay .rarity-tag {
     margin-top: 12px;
@@ -303,7 +340,7 @@
   #detail-inner {
     background: #fff;
     border-radius: 24px;
-    width: min(92vw, 560px);
+    width: min(95vw, 720px);
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 16px 60px rgba(0,0,0,0.25);
@@ -315,10 +352,30 @@
     0% { transform: scale(0.7); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
   }
-  #detail-inner model-viewer {
-    width: 100%; height: min(55vh, 420px);
+  .detail-compare {
+    display: flex;
+    gap: 0;
+    width: 100%;
+  }
+  .detail-compare model-viewer {
+    flex: 1;
+    height: min(50vh, 380px);
     background: #fafafa;
     --poster-color: transparent;
+  }
+  .detail-compare .detail-ref-wrap {
+    flex: 1;
+    height: min(50vh, 380px);
+    background: #f5f0e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .detail-compare .detail-ref-wrap img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
   }
   #detail-info {
     padding: 16px 24px;
@@ -425,16 +482,27 @@
 <!-- 結果展示 -->
 <div id="result-overlay">
   <h2 id="result-name"></h2>
-  <model-viewer
-    id="result-model"
-    auto-rotate
-    camera-controls
-    touch-action="pan-y"
-    shadow-intensity="1.2"
-    environment-image="neutral"
-    exposure="1.1"
-    camera-orbit="30deg 75deg auto"
-  ></model-viewer>
+  <div class="compare-row">
+    <div class="compare-panel">
+      <div class="panel-label">📷 實物參考</div>
+      <div class="ref-img-wrap">
+        <img id="result-ref-img" src="" alt="參考圖" draggable="false">
+      </div>
+    </div>
+    <div class="compare-panel">
+      <div class="panel-label">🎲 3D 模型</div>
+      <model-viewer
+        id="result-model"
+        auto-rotate
+        camera-controls
+        touch-action="pan-y"
+        shadow-intensity="1.2"
+        environment-image="neutral"
+        exposure="1.1"
+        camera-orbit="30deg 75deg auto"
+      ></model-viewer>
+    </div>
+  </div>
   <div id="rarity-tag" class="rarity-tag"></div>
   <div class="result-btns">
     <button id="btn-again">🎲 再開一次</button>
@@ -445,12 +513,17 @@
 <!-- 收藏詳情彈窗 -->
 <div id="detail-modal">
   <div id="detail-inner">
-    <model-viewer
-      id="detail-model"
-      auto-rotate camera-controls touch-action="pan-y"
-      shadow-intensity="1.2" environment-image="neutral"
-      exposure="1.1" camera-orbit="30deg 75deg auto"
-    ></model-viewer>
+    <div class="detail-compare">
+      <div class="detail-ref-wrap">
+        <img id="detail-ref-img" src="" alt="參考圖" draggable="false">
+      </div>
+      <model-viewer
+        id="detail-model"
+        auto-rotate camera-controls touch-action="pan-y"
+        shadow-intensity="1.2" environment-image="neutral"
+        exposure="1.1" camera-orbit="30deg 75deg auto"
+      ></model-viewer>
+    </div>
     <div id="detail-info">
       <h3 id="detail-name"></h3>
       <div class="detail-date" id="detail-date"></div>
@@ -467,19 +540,25 @@
 //  資料定義
 // ═══════════════════════════════════════
 const ALL_MODELS = [
-  { file: "models/01-黑貓-歐蜜麻.glb",           name: "黑貓 — 歐蜜麻",           hidden: false },
-  { file: "models/02-銀虎斑貓-島灰.glb",         name: "銀虎斑貓 — 島灰",         hidden: false },
-  { file: "models/03-暹羅貓-月月.glb",           name: "暹羅貓 — 月月",           hidden: false },
-  { file: "models/04-三花貓-LUCK.glb",           name: "三花貓 — LUCK",           hidden: false },
-  { file: "models/05-豹貓-斑吉.glb",             name: "豹貓 — 斑吉",             hidden: false },
-  { file: "models/06-藍貓-藍藍.glb",             name: "藍貓 — 藍藍",             hidden: false },
-  { file: "models/07-虎斑貓-虎醬.glb",           name: "虎斑貓 — 虎醬",           hidden: false },
-  { file: "models/08-賓士貓-芝麻.glb",           name: "賓士貓 — 芝麻",           hidden: false },
-  { file: "models/09-橘貓-橘子.glb",             name: "橘貓 — 橘子",             hidden: false },
-  { file: "models/10-隱藏款-牛奶貓-斑奶迪克.glb", name: "隱藏款 牛奶貓 — 斑奶迪克", hidden: true  },
-  { file: "models/11-隱藏款-牛奶貓-貝特.glb",     name: "隱藏款 牛奶貓 — 貝特",     hidden: true  },
-  { file: "models/12-隱藏款-招財貓-來財.glb",     name: "隱藏款 招財貓 — 來財",     hidden: true  },
+  { file: "models/01-黑貓-歐蜜麻.glb",           img: "nobg/01-黑貓-歐蜜麻.png",           name: "黑貓 — 歐蜜麻",           hidden: false },
+  { file: "models/02-銀虎斑貓-島灰.glb",         img: "nobg/02-銀虎斑貓-島灰.png",         name: "銀虎斑貓 — 島灰",         hidden: false },
+  { file: "models/03-暹羅貓-月月.glb",           img: "nobg/03-暹羅貓-月月.png",           name: "暹羅貓 — 月月",           hidden: false },
+  { file: "models/04-三花貓-LUCK.glb",           img: "nobg/04-三花貓-LUCK.png",           name: "三花貓 — LUCK",           hidden: false },
+  { file: "models/05-豹貓-斑吉.glb",             img: "nobg/05-豹貓-斑吉.png",             name: "豹貓 — 斑吉",             hidden: false },
+  { file: "models/06-藍貓-藍藍.glb",             img: "nobg/06-藍貓-藍藍.png",             name: "藍貓 — 藍藍",             hidden: false },
+  { file: "models/07-虎斑貓-虎醬.glb",           img: "nobg/07-虎斑貓-虎醬.png",           name: "虎斑貓 — 虎醬",           hidden: false },
+  { file: "models/08-賓士貓-芝麻.glb",           img: "nobg/08-賓士貓-芝麻.png",           name: "賓士貓 — 芝麻",           hidden: false },
+  { file: "models/09-橘貓-橘子.glb",             img: "nobg/09-橘貓-橘子.png",             name: "橘貓 — 橘子",             hidden: false },
+  { file: "models/10-隱藏款-牛奶貓-斑奶迪克.glb", img: "nobg/10-隱藏款-牛奶貓-斑奶迪克.png", name: "隱藏款 牛奶貓 — 斑奶迪克", hidden: true  },
+  { file: "models/11-隱藏款-牛奶貓-貝特.glb",     img: "nobg/11-隱藏款-牛奶貓-貝特.png",     name: "隱藏款 牛奶貓 — 貝特",     hidden: true  },
+  { file: "models/12-隱藏款-招財貓-來財.glb",     img: "nobg/12-隱藏款-招財貓-來財.png",     name: "隱藏款 招財貓 — 來財",     hidden: true  },
 ];
+
+// 從 glb 路徑反查 img 路徑
+function getImgForFile(file) {
+  const m = ALL_MODELS.find(m => m.file === file);
+  return m ? m.img : "";
+}
 
 let isAnimating = false;
 
@@ -569,6 +648,7 @@ function showResult(model) {
 
   resultName.textContent = `🎉 ${model.name}`;
   resultModel.setAttribute("src", encodeURIComponent(model.file));
+  document.getElementById("result-ref-img").src = encodeURIComponent(model.img);
 
   // 存入 localStorage
   saveToCollection(model);
@@ -756,6 +836,7 @@ function openDetail(item) {
   document.getElementById("detail-name").textContent = item.name;
   document.getElementById("detail-date").textContent = item.date ? `抽到時間：${item.date}` : "";
   document.getElementById("detail-model").setAttribute("src", encodeURIComponent(item.file));
+  document.getElementById("detail-ref-img").src = encodeURIComponent(getImgForFile(item.file));
   document.getElementById("detail-modal").classList.add("show");
 }
 

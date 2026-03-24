@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>GLB 模型預覽</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft JhengHei", sans-serif; background: #1a1a2e; color: #fff; }
+  h1 { text-align: center; padding: 20px; color: #ffe082; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    padding: 0 24px 24px;
+  }
+  .card {
+    background: #16213e;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .card model-viewer {
+    width: 100%;
+    height: 300px;
+    background: #0f3460;
+    --poster-color: transparent;
+  }
+  .card .name {
+    padding: 12px;
+    text-align: center;
+    font-size: 1.1em;
+    color: #ffe082;
+  }
+  .card .size {
+    padding: 0 12px 12px;
+    text-align: center;
+    font-size: 0.8em;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<h1>🐱 GLB 模型預覽（12 隻貓）</h1>
+<div class="grid" id="grid"></div>
+
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<script>
+const models = [
+  "01-黑貓-歐蜜麻",
+  "02-銀虎斑貓-島灰",
+  "03-暹羅貓-月月",
+  "04-三花貓-LUCK",
+  "05-豹貓-斑吉",
+  "06-藍貓-藍藍",
+  "07-虎斑貓-虎醬",
+  "08-賓士貓-芝麻",
+  "09-橘貓-橘子",
+  "10-隱藏款-牛奶貓-斑奶迪克",
+  "11-隱藏款-牛奶貓-貝特",
+  "12-隱藏款-招財貓-來財"
+];
+
+const grid = document.getElementById("grid");
+models.forEach(name => {
+  const file = `models/${name}.glb`;
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <model-viewer
+      src="${encodeURIComponent(file)}"
+      auto-rotate
+      camera-controls
+      touch-action="pan-y"
+      shadow-intensity="1"
+      environment-image="neutral"
+      exposure="1.1"
+      camera-orbit="30deg 75deg auto"
+    ></model-viewer>
+    <div class="name">${name}</div>
+  `;
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>
