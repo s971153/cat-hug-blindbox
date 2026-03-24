@@ -182,6 +182,123 @@
   #btn-again:hover { transform: scale(1.06); }
   #btn-again:active { transform: scale(0.97); }
 
+  /* ── 收藏按鈕 ── */
+  #btn-collection {
+    position: fixed;
+    top: 16px; right: 16px;
+    z-index: 50;
+    padding: 10px 22px;
+    font-size: 1em;
+    border: none;
+    border-radius: 30px;
+    background: rgba(0,0,0,0.55);
+    color: #ffe082;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: transform 0.2s, background 0.2s;
+    letter-spacing: 1px;
+  }
+  #btn-collection:hover { background: rgba(0,0,0,0.75); transform: scale(1.05); }
+  #btn-collection .badge {
+    display: inline-block;
+    background: #ff7043;
+    color: #fff;
+    border-radius: 50%;
+    min-width: 22px; height: 22px;
+    line-height: 22px;
+    text-align: center;
+    font-size: 0.8em;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── 收藏頁 ── */
+  #collection-overlay {
+    position: fixed; inset: 0;
+    z-index: 300;
+    display: none;
+    flex-direction: column;
+    background: linear-gradient(135deg, #fff8e1, #ffe0b2);
+    overflow-y: auto;
+  }
+  #collection-overlay.show { display: flex; }
+  #collection-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 1;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  #collection-header h2 { font-size: 1.4em; color: #e65100; }
+  #collection-header .progress { color: #888; font-size: 0.95em; }
+  #btn-close-collection {
+    padding: 8px 20px;
+    border: none; border-radius: 20px;
+    background: #ef5350; color: #fff;
+    cursor: pointer; font-size: 0.95em;
+    transition: transform 0.2s;
+  }
+  #btn-close-collection:hover { transform: scale(1.06); }
+  #collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    padding: 20px 24px;
+  }
+  .col-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+  }
+  .col-card:hover { transform: translateY(-4px); }
+  .col-card model-viewer {
+    width: 100%; height: 220px;
+    background: #fafafa;
+    --poster-color: transparent;
+  }
+  .col-card .col-info {
+    padding: 10px 14px;
+    text-align: center;
+    font-weight: bold;
+    color: #5d4037;
+  }
+  .col-card .col-date {
+    padding: 0 14px 10px;
+    text-align: center;
+    font-size: 0.8em;
+    color: #aaa;
+  }
+  .col-card-locked {
+    background: #f5f5f5;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 280px;
+    opacity: 0.5;
+  }
+  .col-card-locked .lock-icon { font-size: 3em; }
+  .col-card-locked .lock-text { margin-top: 8px; color: #bbb; font-size: 0.9em; }
+  #btn-clear-collection {
+    margin: 0 24px 24px;
+    padding: 10px 24px;
+    border: 2px solid #ef5350;
+    border-radius: 20px;
+    background: transparent;
+    color: #ef5350;
+    cursor: pointer;
+    font-size: 0.9em;
+    align-self: flex-start;
+    transition: all 0.2s;
+  }
+  #btn-clear-collection:hover { background: #ef5350; color: #fff; }
+
   /* ── 粒子 ── */
   .confetti {
     position: fixed;
@@ -202,6 +319,20 @@
 <!-- 主場景：2D 盒子圖片 -->
 <div id="scene">
   <img id="box-img" src="box.jpg" alt="貓的抱抱盲盒" draggable="false">
+</div>
+
+<!-- 收藏按鈕 -->
+<button id="btn-collection">📦 我的收藏 <span class="badge" id="collection-count">0</span></button>
+
+<!-- 收藏頁 -->
+<div id="collection-overlay">
+  <div id="collection-header">
+    <h2>📦 我的收藏</h2>
+    <span class="progress" id="collection-progress"></span>
+    <button id="btn-close-collection">✕ 關閉</button>
+  </div>
+  <div id="collection-grid"></div>
+  <button id="btn-clear-collection">🗑️ 清空收藏</button>
 </div>
 
 <!-- 點擊提示 -->
@@ -335,6 +466,9 @@ function showResult(model) {
   resultName.textContent = `🎉 ${model.name}`;
   resultModel.setAttribute("src", encodeURIComponent(model.file));
 
+  // 存入 localStorage
+  saveToCollection(model);
+
   if (model.hidden) {
     rarityTag.textContent = "✨ 隱藏款！";
     rarityTag.className = "rarity-tag rarity-hidden";
@@ -416,8 +550,102 @@ document.getElementById("btn-again").addEventListener("click", (e) => {
 });
 
 // ═══════════════════════════════════════
+//  收藏系統（localStorage）
+// ═══════════════════════════════════════
+const STORAGE_KEY = "cat_hug_collection";
+
+function getCollection() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch { return []; }
+}
+
+function saveToCollection(model) {
+  const collection = getCollection();
+  collection.push({
+    file: model.file,
+    name: model.name,
+    hidden: model.hidden,
+    date: new Date().toLocaleString("zh-TW")
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
+  updateCollectionBadge();
+}
+
+function updateCollectionBadge() {
+  const count = getCollection().length;
+  document.getElementById("collection-count").textContent = count;
+}
+
+function getUniqueCount() {
+  const collection = getCollection();
+  return new Set(collection.map(c => c.file)).size;
+}
+
+function renderCollection() {
+  const grid = document.getElementById("collection-grid");
+  const progress = document.getElementById("collection-progress");
+  const collection = getCollection();
+  const uniqueFiles = new Set(collection.map(c => c.file));
+
+  progress.textContent = `已收集 ${uniqueFiles.size} / ${ALL_MODELS.length} 種`;
+  grid.innerHTML = "";
+
+  // 已收集的（按時間倒序顯示每一次抽到的）
+  const reversed = [...collection].reverse();
+  reversed.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "col-card";
+    card.innerHTML = `
+      <model-viewer
+        src="${encodeURIComponent(item.file)}"
+        auto-rotate camera-controls touch-action="pan-y"
+        shadow-intensity="1" environment-image="neutral"
+        loading="lazy"
+      ></model-viewer>
+      <div class="col-info">${item.name}</div>
+      <div class="col-date">${item.date}</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // 尚未收集的種類
+  ALL_MODELS.forEach(m => {
+    if (!uniqueFiles.has(m.file)) {
+      const card = document.createElement("div");
+      card.className = "col-card-locked";
+      card.innerHTML = `
+        <div class="lock-icon">❓</div>
+        <div class="lock-text">尚未收集</div>
+      `;
+      grid.appendChild(card);
+    }
+  });
+}
+
+// 收藏頁開關
+document.getElementById("btn-collection").addEventListener("click", () => {
+  renderCollection();
+  document.getElementById("collection-overlay").classList.add("show");
+});
+
+document.getElementById("btn-close-collection").addEventListener("click", () => {
+  document.getElementById("collection-overlay").classList.remove("show");
+});
+
+// 清空收藏
+document.getElementById("btn-clear-collection").addEventListener("click", () => {
+  if (confirm("確定要清空所有收藏嗎？")) {
+    localStorage.removeItem(STORAGE_KEY);
+    updateCollectionBadge();
+    renderCollection();
+  }
+});
+
+// ═══════════════════════════════════════
 //  啟動
 // ═══════════════════════════════════════
+updateCollectionBadge();
 createBgPaws();
 </script>
 </body>
