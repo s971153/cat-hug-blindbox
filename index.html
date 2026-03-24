@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貓的抱抱 ─ 開盲盒</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    background: radial-gradient(ellipse at center, #fff8e1 0%, #ffe082 70%, #ffb300 100%);
+    overflow: hidden;
+    width: 100vw; height: 100vh;
+    user-select: none;
+  }
+
+  /* ── 主場景容器 ── */
+  #scene {
+    position: fixed; inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+  }
+
+  /* ── 盒子圖片 ── */
+  #box-img {
+    width: min(55vw, 360px);
+    cursor: pointer;
+    filter: drop-shadow(0 12px 32px rgba(0,0,0,0.18));
+    animation: boxFloat 2.4s ease-in-out infinite;
+    transition: opacity 0.3s;
+  }
+  @keyframes boxFloat {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-14px); }
+  }
+  #box-img.shaking {
+    animation: boxShake 1.2s ease-in-out forwards;
+  }
+  @keyframes boxShake {
+    0%   { transform: translate(0, 0)   rotate(0deg); }
+    5%   { transform: translate(-12px, -4px)  rotate(-4deg); }
+    10%  { transform: translate(10px, 2px)   rotate(3.5deg); }
+    15%  { transform: translate(-14px, -2px)  rotate(-5deg); }
+    20%  { transform: translate(12px, 4px)   rotate(4deg); }
+    25%  { transform: translate(-10px, -6px)  rotate(-3deg); }
+    30%  { transform: translate(14px, 2px)   rotate(5deg); }
+    35%  { transform: translate(-8px, -4px)   rotate(-4.5deg); }
+    40%  { transform: translate(10px, 6px)   rotate(3deg); }
+    45%  { transform: translate(-12px, -2px)  rotate(-5deg); }
+    50%  { transform: translate(8px, 4px)    rotate(4deg); }
+    55%  { transform: translate(-10px, -4px)  rotate(-3.5deg); }
+    60%  { transform: translate(6px, 2px)    rotate(3deg); }
+    65%  { transform: translate(-8px, -2px)   rotate(-2.5deg); }
+    70%  { transform: translate(6px, 4px)    rotate(2deg); }
+    75%  { transform: translate(-4px, -2px)   rotate(-1.5deg); }
+    80%  { transform: translate(4px, 2px)    rotate(1deg); }
+    85%  { transform: translate(-2px, -1px)   rotate(-0.5deg); }
+    90%  { transform: translate(2px, 1px)    rotate(0.3deg); }
+    95%  { transform: translate(-1px, 0)     rotate(-0.1deg); }
+    100% { transform: translate(0, 0)        rotate(0deg); }
+  }
+  #box-img.shrink {
+    animation: boxShrink 0.5s ease-in forwards;
+  }
+  @keyframes boxShrink {
+    0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: scale(0) rotate(180deg); opacity: 0; }
+  }
+
+  /* ── 背景飄動裝飾 ── */
+  .bg-paw {
+    position: fixed;
+    font-size: 2em;
+    opacity: 0.15;
+    pointer-events: none;
+    animation: pawFloat linear infinite;
+    z-index: 0;
+  }
+  @keyframes pawFloat {
+    0%   { transform: translateY(110vh) rotate(0deg); opacity: 0.15; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ── 提示文字 ── */
+  #hint {
+    position: fixed;
+    bottom: 60px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    background: rgba(0,0,0,0.65);
+    color: #ffe082;
+    padding: 14px 36px;
+    border-radius: 40px;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+    pointer-events: none;
+    animation: hintPulse 1.8s ease-in-out infinite;
+    white-space: nowrap;
+  }
+  @keyframes hintPulse {
+    0%,100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.6; transform: translateX(-50%) scale(1.05); }
+  }
+
+  /* ── 過場動畫影片 ── */
+  #video-overlay {
+    position: fixed; inset: 0;
+    z-index: 100;
+    background: #000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+  #video-overlay video {
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%; height: 100%;
+    object-fit: contain;
+  }
+
+  /* ── 結果展示 ── */
+  #result-overlay {
+    position: fixed; inset: 0;
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(ellipse at center, #fff8e1 0%, #ffe082 60%, #ffb300 100%);
+    animation: resultFadeIn 0.8s ease;
+  }
+  @keyframes resultFadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  #result-overlay h2 {
+    font-size: 2em;
+    color: #e65100;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 8px;
+    animation: resultBounce 0.8s ease;
+  }
+  @keyframes resultBounce {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  #result-overlay model-viewer {
+    width: min(90vw, 520px);
+    height: min(60vh, 520px);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.5);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+    --poster-color: transparent;
+  }
+  #result-overlay .rarity-tag {
+    margin-top: 12px;
+    padding: 6px 24px;
+    border-radius: 20px;
+    font-size: 1em;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  .rarity-normal { background: #a5d6a7; color: #1b5e20; }
+  .rarity-hidden { background: #ffab91; color: #bf360c; }
+
+  #btn-again {
+    margin-top: 22px;
+    padding: 14px 44px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 40px;
+    background: linear-gradient(135deg, #ff7043, #ff8a65);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.4);
+    transition: transform 0.2s;
+    letter-spacing: 2px;
+  }
+  #btn-again:hover { transform: scale(1.06); }
+  #btn-again:active { transform: scale(0.97); }
+
+  /* ── 粒子 ── */
+  .confetti {
+    position: fixed;
+    z-index: 250;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    pointer-events: none;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- 主場景：2D 盒子圖片 -->
+<div id="scene">
+  <img id="box-img" src="box.jpg" alt="貓的抱抱盲盒" draggable="false">
+</div>
+
+<!-- 點擊提示 -->
+<div id="hint">👆 點擊盒子開盲盒！</div>
+
+<!-- 過場動畫影片 -->
+<div id="video-overlay">
+  <video id="transition-video" preload="auto" playsinline>
+    <source src="transition.mp4" type="video/mp4">
+  </video>
+</div>
+
+<!-- 結果展示 -->
+<div id="result-overlay">
+  <h2 id="result-name"></h2>
+  <model-viewer
+    id="result-model"
+    auto-rotate
+    camera-controls
+    touch-action="pan-y"
+    shadow-intensity="1.2"
+    environment-image="neutral"
+    exposure="1.1"
+    camera-orbit="30deg 75deg auto"
+  ></model-viewer>
+  <div id="rarity-tag" class="rarity-tag"></div>
+  <button id="btn-again">🎲 再開一次</button>
+</div>
+
+<!-- model-viewer 元件 -->
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════
+//  資料定義
+// ═══════════════════════════════════════
+const ALL_MODELS = [
+  { file: "models/01-黑貓-歐蜜麻.glb",       name: "黑貓 — 歐蜜麻",       hidden: false },
+  { file: "models/02-銀虎斑貓-島灰.glb",     name: "銀虎斑貓 — 島灰",     hidden: false },
+  { file: "models/03-暹羅貓-月月.glb",       name: "暹羅貓 — 月月",       hidden: false },
+  { file: "models/04-三花貓-LUCK.glb",       name: "三花貓 — LUCK",       hidden: false },
+  { file: "models/05-豹貓-斑吉.glb",         name: "豹貓 — 斑吉",         hidden: false },
+];
+
+let isAnimating = false;
+
+// ═══════════════════════════════════════
+//  背景飄動貓掌裝飾
+// ═══════════════════════════════════════
+function createBgPaws() {
+  const emojis = ["🐾", "🐱", "✨", "🐾", "💛"];
+  for (let i = 0; i < 12; i++) {
+    const el = document.createElement("div");
+    el.className = "bg-paw";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + "vw";
+    el.style.fontSize = (1.2 + Math.random() * 2) + "em";
+    el.style.animationDuration = (6 + Math.random() * 8) + "s";
+    el.style.animationDelay = (Math.random() * 10) + "s";
+    document.body.appendChild(el);
+  }
+}
+
+// ═══════════════════════════════════════
+//  盒子晃動動畫（CSS class 驅動）
+// ═══════════════════════════════════════
+function shakeBox() {
+  return new Promise(resolve => {
+    const img = document.getElementById("box-img");
+    img.classList.remove("boxFloat");
+    img.classList.add("shaking");
+    img.addEventListener("animationend", function handler() {
+      img.removeEventListener("animationend", handler);
+      img.classList.remove("shaking");
+      resolve();
+    });
+  });
+}
+
+// ═══════════════════════════════════════
+//  盒子縮小消失動畫
+// ═══════════════════════════════════════
+function shrinkBox() {
+  return new Promise(resolve => {
+    const img = document.getElementById("box-img");
+    img.classList.add("shrink");
+    img.addEventListener("animationend", function handler() {
+      img.removeEventListener("animationend", handler);
+      img.style.visibility = "hidden";
+      img.classList.remove("shrink");
+      resolve();
+    });
+  });
+}
+
+// ═══════════════════════════════════════
+//  播放過場動畫
+// ═══════════════════════════════════════
+function playTransitionVideo() {
+  return new Promise(resolve => {
+    const overlay = document.getElementById("video-overlay");
+    const video = document.getElementById("transition-video");
+
+    overlay.style.display = "flex";
+    video.currentTime = 0;
+    video.play();
+
+    video.onended = () => {
+      overlay.style.display = "none";
+      resolve();
+    };
+
+    video.onerror = () => {
+      setTimeout(() => {
+        overlay.style.display = "none";
+        resolve();
+      }, 500);
+    };
+  });
+}
+
+// ═══════════════════════════════════════
+//  顯示結果
+// ═══════════════════════════════════════
+function showResult(model) {
+  const resultOverlay = document.getElementById("result-overlay");
+  const resultName = document.getElementById("result-name");
+  const resultModel = document.getElementById("result-model");
+  const rarityTag = document.getElementById("rarity-tag");
+
+  resultName.textContent = `🎉 ${model.name}`;
+  resultModel.setAttribute("src", encodeURIComponent(model.file));
+
+  if (model.hidden) {
+    rarityTag.textContent = "✨ 隱藏款！";
+    rarityTag.className = "rarity-tag rarity-hidden";
+  } else {
+    rarityTag.textContent = "🐱 普通款";
+    rarityTag.className = "rarity-tag rarity-normal";
+  }
+
+  resultOverlay.style.display = "flex";
+  spawnConfetti();
+}
+
+// ═══════════════════════════════════════
+//  彩色紙屑
+// ═══════════════════════════════════════
+function spawnConfetti() {
+  const colors = ["#ff7043","#ffca28","#66bb6a","#42a5f5","#ab47bc","#ef5350","#26c6da"];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti";
+    el.style.left = Math.random() * 100 + "vw";
+    el.style.top = -10 + "px";
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.width = (6 + Math.random() * 8) + "px";
+    el.style.height = (6 + Math.random() * 8) + "px";
+    el.style.animationDuration = (2 + Math.random() * 2) + "s";
+    el.style.animationDelay = (Math.random() * 0.8) + "s";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+}
+
+// ═══════════════════════════════════════
+//  重置場景
+// ═══════════════════════════════════════
+function resetScene() {
+  document.getElementById("result-overlay").style.display = "none";
+  const img = document.getElementById("box-img");
+  img.style.visibility = "visible";
+  img.style.animation = "";
+  void img.offsetWidth;
+  img.style.animation = null;
+  isAnimating = false;
+  document.getElementById("hint").style.display = "";
+}
+
+// ═══════════════════════════════════════
+//  互動：點擊盒子
+// ═══════════════════════════════════════
+document.getElementById("box-img").addEventListener("click", async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  document.getElementById("hint").style.display = "none";
+
+  // 1) 盒子劇烈晃動
+  await shakeBox();
+
+  // 2) 盒子縮小消失
+  await shrinkBox();
+
+  // 3) 播放過場動畫
+  await playTransitionVideo();
+
+  // 4) 隨機抽取模型
+  const randomIndex = Math.floor(Math.random() * ALL_MODELS.length);
+  const chosen = ALL_MODELS[randomIndex];
+
+  // 5) 顯示結果
+  showResult(chosen);
+});
+
+// ═══════════════════════════════════════
+//  再開一次
+// ═══════════════════════════════════════
+document.getElementById("btn-again").addEventListener("click", (e) => {
+  e.stopPropagation();
+  resetScene();
+});
+
+// ═══════════════════════════════════════
+//  啟動
+// ═══════════════════════════════════════
+createBgPaws();
+</script>
+</body>
+</html>
