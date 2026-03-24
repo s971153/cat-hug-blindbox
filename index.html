@@ -166,21 +166,7 @@
   .rarity-normal { background: #a5d6a7; color: #1b5e20; }
   .rarity-hidden { background: #ffab91; color: #bf360c; }
 
-  #btn-again {
-    margin-top: 22px;
-    padding: 14px 44px;
-    font-size: 1.2em;
-    border: none;
-    border-radius: 40px;
-    background: linear-gradient(135deg, #ff7043, #ff8a65);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(255,112,67,0.4);
-    transition: transform 0.2s;
-    letter-spacing: 2px;
-  }
-  #btn-again:hover { transform: scale(1.06); }
-  #btn-again:active { transform: scale(0.97); }
+  /* old btn-again styles moved to .result-btns */
 
   /* ── 收藏按鈕 ── */
   #btn-collection {
@@ -299,6 +285,97 @@
   }
   #btn-clear-collection:hover { background: #ef5350; color: #fff; }
 
+  /* ── 收藏詳情彈窗 ── */
+  #detail-modal {
+    position: fixed; inset: 0;
+    z-index: 400;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    animation: detailFadeIn 0.3s ease;
+  }
+  #detail-modal.show { display: flex; }
+  @keyframes detailFadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  #detail-inner {
+    background: #fff;
+    border-radius: 24px;
+    width: min(92vw, 560px);
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 16px 60px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    animation: detailPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes detailPop {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  #detail-inner model-viewer {
+    width: 100%; height: min(55vh, 420px);
+    background: #fafafa;
+    --poster-color: transparent;
+  }
+  #detail-info {
+    padding: 16px 24px;
+    text-align: center;
+  }
+  #detail-info h3 {
+    font-size: 1.4em;
+    color: #e65100;
+    margin-bottom: 4px;
+  }
+  #detail-info .detail-date {
+    font-size: 0.85em;
+    color: #999;
+  }
+  #btn-close-detail {
+    margin: 0 auto 16px;
+    padding: 10px 32px;
+    border: none;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ff7043, #ff8a65);
+    color: #fff;
+    cursor: pointer;
+    font-size: 1em;
+    transition: transform 0.2s;
+  }
+  #btn-close-detail:hover { transform: scale(1.06); }
+
+  /* ── 結果頁收藏入口 ── */
+  .result-btns {
+    display: flex;
+    gap: 14px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .result-btns button {
+    padding: 14px 36px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    letter-spacing: 2px;
+  }
+  .result-btns button:hover { transform: scale(1.06); }
+  .result-btns button:active { transform: scale(0.97); }
+  #btn-again {
+    background: linear-gradient(135deg, #ff7043, #ff8a65);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(255,112,67,0.4);
+  }
+  #btn-to-collection {
+    background: linear-gradient(135deg, #42a5f5, #64b5f6);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(66,165,245,0.4);
+  }
+
   /* ── 粒子 ── */
   .confetti {
     position: fixed;
@@ -359,7 +436,27 @@
     camera-orbit="30deg 75deg auto"
   ></model-viewer>
   <div id="rarity-tag" class="rarity-tag"></div>
-  <button id="btn-again">🎲 再開一次</button>
+  <div class="result-btns">
+    <button id="btn-again">🎲 再開一次</button>
+    <button id="btn-to-collection">📦 查看收藏</button>
+  </div>
+</div>
+
+<!-- 收藏詳情彈窗 -->
+<div id="detail-modal">
+  <div id="detail-inner">
+    <model-viewer
+      id="detail-model"
+      auto-rotate camera-controls touch-action="pan-y"
+      shadow-intensity="1.2" environment-image="neutral"
+      exposure="1.1" camera-orbit="30deg 75deg auto"
+    ></model-viewer>
+    <div id="detail-info">
+      <h3 id="detail-name"></h3>
+      <div class="detail-date" id="detail-date"></div>
+    </div>
+    <button id="btn-close-detail">✕ 關閉</button>
+  </div>
 </div>
 
 <!-- model-viewer 元件 -->
@@ -606,6 +703,8 @@ function renderCollection() {
       <div class="col-info">${item.name}</div>
       <div class="col-date">${item.date}</div>
     `;
+    card.style.cursor = "pointer";
+    card.addEventListener("click", () => openDetail(item));
     grid.appendChild(card);
   });
 
@@ -631,6 +730,34 @@ document.getElementById("btn-collection").addEventListener("click", () => {
 
 document.getElementById("btn-close-collection").addEventListener("click", () => {
   document.getElementById("collection-overlay").classList.remove("show");
+});
+
+// 結果頁 → 收藏
+document.getElementById("btn-to-collection").addEventListener("click", (e) => {
+  e.stopPropagation();
+  document.getElementById("result-overlay").style.display = "none";
+  renderCollection();
+  document.getElementById("collection-overlay").classList.add("show");
+});
+
+// ═══════════════════════════════════════
+//  收藏詳情彈窗
+// ═══════════════════════════════════════
+function openDetail(item) {
+  document.getElementById("detail-name").textContent = item.name;
+  document.getElementById("detail-date").textContent = item.date ? `抽到時間：${item.date}` : "";
+  document.getElementById("detail-model").setAttribute("src", encodeURIComponent(item.file));
+  document.getElementById("detail-modal").classList.add("show");
+}
+
+document.getElementById("btn-close-detail").addEventListener("click", () => {
+  document.getElementById("detail-modal").classList.remove("show");
+});
+
+document.getElementById("detail-modal").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) {
+    document.getElementById("detail-modal").classList.remove("show");
+  }
 });
 
 // 清空收藏
