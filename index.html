@@ -678,9 +678,23 @@ function playTransitionVideo() {
     const overlay = document.getElementById("video-overlay");
     const video = document.getElementById("transition-video");
 
-    overlay.style.display = "flex";
+    // 先隱藏 overlay，將影片跳回開頭，等 seek 完成再顯示播放
+    overlay.style.display = "none";
     video.currentTime = 0;
-    video.play();
+
+    function startPlay() {
+      video.removeEventListener("seeked", startPlay);
+      overlay.style.display = "flex";
+      video.play();
+    }
+
+    // 如果已經在 0 就直接播
+    if (video.currentTime === 0 && video.readyState >= 2) {
+      overlay.style.display = "flex";
+      video.play();
+    } else {
+      video.addEventListener("seeked", startPlay);
+    }
 
     video.onended = () => {
       overlay.style.display = "none";
@@ -750,6 +764,8 @@ function spawnConfetti() {
 function resetScene() {
   document.getElementById("result-overlay").style.display = "none";
   document.getElementById("result-model").removeAttribute("src");
+  document.getElementById("result-ref-img").src = "";
+  document.getElementById("result-name").textContent = "";
   const img = document.getElementById("box-img");
   img.style.visibility = "visible";
   img.style.animation = "";
